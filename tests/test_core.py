@@ -130,8 +130,50 @@ def test_milestone_3():
 
 
 
-# Milestone 4: Design a CLI where users can input a starting phrase and generate dialogue.
-@pytest.mark.skip(reason="remove this line when you start milestone 4")
-def test_milestone_4():
-    raise NotImplementedError("write the test for milestone 4")
+
+# Milestone 4: Test the command-line interface
+def test_milestone_4(capsys):
+    import pytest
+    from app.cli import main
+
+    # Test dialogue generation
+    main([
+        "generate",
+        "--prompt", "the northern",
+        "--max-words", "20"
+    ])
+
+    output = capsys.readouterr().out
+
+    assert "GAME DIALOGUE ASSISTANT" in output
+    assert "GENERATED NPC DIALOGUE" in output
+    assert "The northern" in output
+
+    # Test custom n-gram configuration
+    main([
+        "generate",
+        "--prompt", "the ancient",
+        "--max-words", "10",
+        "--n", "3",
+        "--k", "0.5"
+    ])
+
+    output = capsys.readouterr().out
+
+    assert "The ancient" in output
+    assert "Smoothing       : 0.5" in output
+
+    # Verify the original starter command
+    main(["hello"])
+
+    output = capsys.readouterr().out
+    assert "is ready" in output
+
+    # Invalid input should produce an error
+    with pytest.raises(SystemExit):
+        main([
+            "generate",
+            "--prompt", "",
+            "--max-words", "10"
+        ])
 
