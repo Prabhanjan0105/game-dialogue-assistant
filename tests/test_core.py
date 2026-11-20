@@ -37,16 +37,97 @@ def test_milestone_1():
 
 
 
-# Milestone 2: Build the n-gram language model with smoothing.
-@pytest.mark.skip(reason="remove this line when you start milestone 2")
+
+# Milestone 2: Build n-gram model with smoothing
 def test_milestone_2():
-    raise NotImplementedError("write the test for milestone 2")
+    from app.core import milestone_2
+
+    model = milestone_2(n=3, k=1.0)
+
+    # Verify model structure
+    assert model["n"] == 3
+    assert model["k"] == 1.0
+    assert len(model["vocabulary"]) > 0
+
+    assert len(model["ngram_counts"]) > 0
+    assert len(model["context_counts"]) > 0
+
+    # Verify next-word prediction
+    predictions = model["predict_next"](
+        ["the", "northern"],
+        top_n=5
+    )
+
+    assert len(predictions) == 5
+
+    # "gate" should be the most likely next word
+    assert predictions[0][0] == "gate"
+
+    # Probabilities must be valid
+    for word, probability in predictions:
+        assert isinstance(word, str)
+        assert 0 < probability <= 1
+
+    # Verify descending probability order
+    probabilities = [
+        probability for word, probability in predictions
+    ]
+
+    assert probabilities == sorted(
+        probabilities, reverse=True
+    )
+
+    # Verify unseen context receives smoothing
+    unseen = model["predict_next"](
+        ["unknown", "context"],
+        top_n=3
+    )
+
+    assert all(prob > 0 for _, prob in unseen)
 
 
-# Milestone 3: Implement dialogue generation logic using the model.
-@pytest.mark.skip(reason="remove this line when you start milestone 3")
+
+# Milestone 3: Implement NPC dialogue generation
 def test_milestone_3():
-    raise NotImplementedError("write the test for milestone 3")
+    from app.core import milestone_3
+
+    # Generate dialogue from a known starting phrase
+    dialogue = milestone_3(
+        starting_phrase="the northern",
+        max_words=20
+    )
+
+    assert isinstance(dialogue, str)
+    assert len(dialogue) > 0
+
+    # Verify starting phrase is preserved
+    assert dialogue.lower().startswith("the northern")
+
+    # Verify sentence formatting
+    assert dialogue[0].isupper()
+    assert dialogue.endswith(".")
+
+    # Verify a known dialogue sequence
+    assert "northern gate" in dialogue.lower()
+
+    # Verify configurable maximum length
+    short_dialogue = milestone_3(
+        starting_phrase="the northern",
+        max_words=2
+    )
+
+    # Two initial words + at most two generated words
+    assert len(short_dialogue.rstrip(".").split()) <= 4
+
+    # Verify invalid input handling
+    import pytest
+
+    with pytest.raises(ValueError):
+        milestone_3(starting_phrase="")
+
+    with pytest.raises(ValueError):
+        milestone_3(max_words=0)
+
 
 
 # Milestone 4: Design a CLI where users can input a starting phrase and generate dialogue.
